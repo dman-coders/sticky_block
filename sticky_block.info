@@ -1,0 +1,3 @@
+name = Sticky Block
+description = Fixes block postitioning on the screen to prevent them scrolling off
+core = 7.x

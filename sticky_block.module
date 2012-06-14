@@ -1,0 +1,14 @@
+<?php
+/**
+ * @file
+ * 
+ * Add the css class 'sidebarsticky' to a block to have it remain in a fixed position 
+ * when scrolling.
+ * Use something like block_class.module, or do it in your theme.
+ * 
+ * @author dman dan@coders.co.nz
+ */
+
+function sticky_block_init() {
+  drupal_add_js(drupal_get_path('module', 'sticky_block') . '/sticky_block.js');
+}
