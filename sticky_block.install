@@ -1,0 +1,8 @@
+<?php
+
+/**
+ * Implements hook_uninstall().
+ */
+function advanced_help_uninstall() {
+  variable_del('sticky_block_settings');
+}

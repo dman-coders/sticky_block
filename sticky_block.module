@@ -1,14 +1,96 @@
 <?php
 /**
  * @file
+ * Allows you to force a block to be displayed on the page at all times,
+ * by using css to anchor it to the window when it would otherwise be scrolled off.
  * 
- * Add the css class 'sidebarsticky' to a block to have it remain in a fixed position 
- * when scrolling.
- * Use something like block_class.module, or do it in your theme.
+ * Admin is available in the individual block settings page, in a tab called "sticky"
+ * 
+ * Alternatively you can use something like block_class.module, or your theme, to add 
+ * the class 'sticky-block' to your elements that must remain on the page at all times.
  * 
  * @author dman dan@coders.co.nz
  */
 
+/**
+ * Include the js everywhere.
+ * 
+ * hook_init()
+ */
 function sticky_block_init() {
   drupal_add_js(drupal_get_path('module', 'sticky_block') . '/sticky_block.js');
+}
+
+
+////////// Add a UI ////////////////
+// This is several times more work than just making the thing work.
+
+function sticky_block_preprocess_block(&$vars) {
+  $block = $vars['block'];
+  $sticky_block_settings = variable_get('sticky_block_settings', array());
+  $sticky_block_status = @$sticky_block_settings[$block->module][$block->delta];
+  if ($sticky_block_status) {
+    $vars['classes_array'][] = 'sticky-block';
+  } 
+}
+
+/**
+ * Add the setting to any block configuration page.
+ * 
+ * HOOK_form_FORMID_alter() for block_admin_configure form.
+ */
+function sticky_block_form_block_admin_configure_alter(&$form, &$form_state) {
+  list($block_module, $block_delta) = $form_state['build_info']['args'];
+  $sticky_block_settings = variable_get('sticky_block_settings');
+  $sticky_block_status = @$sticky_block_settings[$block_module][$block_delta];
+  $block = block_load($block_module, $block_delta);
+  
+  // Add the sticky option under the 'visibility' settings.
+  $form['visibility']['sticky_block'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Sticky',
+    '#collapsed' => TRUE, 
+    '#collapsible' => TRUE,
+    '#group' => 'visibility',
+    'sticky' => array(
+      '#type' => 'checkbox',
+      '#default_value' => $sticky_block_status,
+      '#title' => t('Make sticky'),
+      '#description' => t("
+        Enable this to ensure this block is always visible on the page, 
+        by preventing it from scrolling off. 
+        This can conflict strangely with some themes, 
+        and you shouldn't have more than one sticky block per column 
+        using this method.
+      "),
+    ),
+    '#attached' => array(
+      'js' => array(drupal_get_path('module', 'sticky_block') . '/sticky_block.admin.js'),
+    ),
+  );
+  $form['#submit'][] = 'sticky_block_admin_submit';   
+}
+
+/**
+ * Save settings when block admin is saved.
+ * 
+ * FAPI callback
+ */
+function sticky_block_admin_submit($form, &$form_state) {
+  $sticky_block_settings = variable_get('sticky_block_settings');
+  $form_values = $form_state['values'];
+  if (isset($form_values['sticky'])) {
+    if ($form_values['sticky']) {
+      $sticky_block_settings[$form_values['module']][$form_values['delta']] = TRUE;
+    }
+    else {
+      // Keep the settings array sparse. Only save the 'on' values.
+      // Don't clutter it with 'off' settings for all blocks.
+      unset($sticky_block_settings[$form_values['module']][$form_values['delta']]);
+      if (empty($sticky_block_settings[$form_values['module']])) {
+        unset($sticky_block_settings[$form_values['module']]);
+      }
+    }
+  }
+  variable_set('sticky_block_settings', $sticky_block_settings);
 }
