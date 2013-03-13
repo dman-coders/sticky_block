@@ -3,6 +3,6 @@
 /**
  * Implements hook_uninstall().
  */
-function advanced_help_uninstall() {
+function sticky_block_uninstall() {
   variable_del('sticky_block_settings');
 }
