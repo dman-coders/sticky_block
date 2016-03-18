@@ -47,7 +47,8 @@ function toggle_sticky_block(){
   $('.sticky-block').each( function(index) {
     var block = $(this);
     // Find the placeholder that should be directly before the target block
-    var pinpoint_y = parseInt($('.sticky-block-pinpoint', block.parent()).offset().top);
+    var pinpoint = $('.sticky-block-pinpoint', block.parent());
+    var pinpoint_y = parseInt(pinpoint.offset().top);
     // The location of the pinpoint 
     // (a placeholder inserted just above the target that moves with the normal flow) 
     // is the key.
@@ -63,6 +64,11 @@ function toggle_sticky_block(){
       // Switching to fixed may sometimes affect layout width unexpectedly, 
       // so there's a fix for that here too.
       if (!block.hasClass('fixed')) {
+        // In some themes removing the content of the sidebar block makes its
+        // column collapse. Leave a sliver of the pinpoint behind to hold
+        // the borders out.
+        pinpoint.width(block.width()).height(1);
+
         block.addClass('fixed')
           .width(block.width())
           .css({'position':'fixed', 'top':'10px', 'overflow':'hidden'})
